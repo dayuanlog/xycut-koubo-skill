@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Write an Agent-generated cover image into a 小映 task.
+"""Write an Agent-generated cover image into a xycut task.
 
 The image generation itself should be handled by a dedicated image skill. This
-script only records an already-created image in cover_plan.json so the 小映 page
+script only records an already-created image in cover_plan.json so the xycut page
 can preview and use it when generating the Jianying draft.
 """
 
@@ -94,8 +94,8 @@ def _write_title(storage, task_id: str, title: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="保存小映 Agent 封面图片到 cover_plan.json")
-    parser.add_argument("task", help="小映 task_id 或任务目录")
+    parser = argparse.ArgumentParser(description="保存xycut Agent 封面图片到 cover_plan.json")
+    parser.add_argument("task", help="xycut task_id 或任务目录")
     parser.add_argument("cover_path", help="已生成并保存到任务目录内的封面图片路径")
     parser.add_argument("--base-url", default="http://127.0.0.1:23568")
     parser.add_argument("--source", default="agent_generated_cover")

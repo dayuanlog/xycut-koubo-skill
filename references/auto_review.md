@@ -1,10 +1,10 @@
 # 模式 A：Agent 自动预审
 
-目标：让 Agent 先完成一轮口播预审，把明显重复、残句、卡顿、口癖和 ASR 修正建议写回小映；最终仍由用户在小映页面确认。
+目标：让 Agent 先完成一轮口播预审，把明显重复、残句、卡顿、口癖和 ASR 修正建议写回xycut；最终仍由用户在xycut页面确认。
 
-## A0. 判断是否已有小映任务
+## A0. 判断是否已有xycut任务
 
-如果用户给的是小映任务目录，并要求“继续分析逐字稿”“口播剪辑审核”“预审口误/重复/错字”，说明前端可能已经完成转写。此时不要重新转写，先检查：
+如果用户给的是xycut任务目录，并要求“继续分析逐字稿”“口播剪辑审核”“预审口误/重复/错字”，说明前端可能已经完成转写。此时不要重新转写，先检查：
 
 ```text
 <task_dir>/transcript.json
@@ -14,7 +14,7 @@
 
 只有用户给的是原始音视频路径时，才执行 A1 创建转写任务。
 
-## A1. 创建小映转写任务
+## A1. 创建xycut转写任务
 
 标准入口：
 
@@ -30,7 +30,7 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/transcribe
 
 如果用户没有明确顺序，优先按文件名排序；仍不确定时先询问用户。
 
-不要手动合成完整视频，也不要分别转写再拼时间戳。小映后端会生成连续音频和来源映射：
+不要手动合成完整视频，也不要分别转写再拼时间戳。xycut后端会生成连续音频和来源映射：
 
 ```text
 source_audio.wav
@@ -160,9 +160,9 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/rule_prefi
 - 删除后会破坏语义、节奏或情绪的词。
 - 虽然不完美但具有个人风格的自然口语。
 - 列举、固定搭配、英文词组、自然重复强调，例如“一个一个地”。
-- 不确定是否删除时保留，交给用户在 小映审核台确认。
+- 不确定是否删除时保留，交给用户在 xycut审核台确认。
 
-## A5. 合并并写回小映审核状态
+## A5. 合并并写回xycut审核状态
 
 多个 chunk 分析完成后，先合并：
 
@@ -181,7 +181,7 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/merge_anal
 
 只要传了 `--transcript`，相对输出 `analysis_merged.json` 会自动落到 `<task_dir>`。
 
-然后写回小映审核状态：
+然后写回xycut审核状态：
 
 ```bash
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_auto_review.py <task_id> "<task_dir>/analysis_merged.json"
@@ -189,8 +189,8 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_auto_
 
 `save_auto_review.py` 会：
 
-- 把 `delete_sentences/delete_word_indices` 转成 小映前端可见的删除标记。
-- 把 `word_text_overrides` 转成 小映的单字修正。
+- 把 `delete_sentences/delete_word_indices` 转成 xycut前端可见的删除标记。
+- 把 `word_text_overrides` 转成 xycut的单字修正。
 - 调用 `/api/workflow/v8/review-state/save`。
 - 自动生成 `final_copy.json` 和 `final_copy.txt`。
 

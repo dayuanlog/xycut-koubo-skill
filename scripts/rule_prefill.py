@@ -34,7 +34,7 @@ def word_text(word):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="小映保守规则预选：明显口癖词/句首填充词")
+    parser = argparse.ArgumentParser(description="xycut保守规则预选：明显口癖词/句首填充词")
     parser.add_argument("transcript_json")
     parser.add_argument("output_json", nargs="?", default="")
     args = parser.parse_args()

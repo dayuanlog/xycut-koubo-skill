@@ -1,16 +1,16 @@
 # 模式 B：Agent 字幕编排
 
-目标：让 Codex/智能体使用自己的理解能力完成短字幕和模板编排；小映只负责保存、页面展示和后续生成剪映草稿。
+目标：让 Codex/智能体使用自己的理解能力完成短字幕和模板编排；xycut只负责保存、页面展示和后续生成剪映草稿。
 
 ## 核心边界
 
 - Agent 是字幕编排的大脑。
-- 小映是保存器、编辑器和草稿生成器。
-- 不调用小映内置 AI 字幕生成接口。
-- 不生成 SRT 来代替小映模板字幕。
+- xycut是保存器、编辑器和草稿生成器。
+- 不调用xycut内置 AI 字幕生成接口。
+- 不生成 SRT 来代替xycut模板字幕。
 - 不直接覆盖任务 JSON 文件，必须通过保存脚本/API 写回。
 
-小映页面右侧字幕列读取：
+xycut页面右侧字幕列读取：
 
 ```text
 <task_dir>/short_subtitles.json
@@ -46,7 +46,7 @@ koubo_template_id
 v8_template_id
 ```
 
-如果没有选择记录，读取小映默认模板：
+如果没有选择记录，读取xycut默认模板：
 
 ```text
 static/template/index.json -> default_template_id
@@ -149,7 +149,7 @@ Agent 按三步思路在自己脑中完成，但最终只保存一个结果文�
 - 不要输出英文 parts，除非用户明确要求双语模板字幕。
 - 不要输出旧字段 `sound_effect_id`。
 
-## B5. 写回小映
+## B5. 写回xycut
 
 生成 `agent_subtitle_plan.json` 后，调用：
 
@@ -163,14 +163,14 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_agent
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_agent_subtitle_plan.py "<task_dir>" "<task_dir>/agent/agent_subtitle_plan.json"
 ```
 
-脚本只调用小映保存 API：
+脚本只调用xycut保存 API：
 
 ```text
 POST /api/workflow/v8/short-subtitles/save
 POST /api/workflow/v8/subtitle-layout-plan/save
 ```
 
-它不会调用小映内置 AI。
+它不会调用xycut内置 AI。
 
 ## B6. 返回用户
 

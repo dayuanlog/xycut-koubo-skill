@@ -1,11 +1,11 @@
 # Agent 字幕编排细则
 
-这份规则用于约束 Codex/智能体如何生成小映模板字幕。核心原则是：Agent 负责 AI 判断，小映负责保存和执行。
+这份规则用于约束 Codex/智能体如何生成xycut模板字幕。核心原则是：Agent 负责 AI 判断，xycut负责保存和执行。
 
 ## 不要做的事
 
 - 不要调用 `/api/workflow/v8/subtitle-workflow/ai-generate`。
-- 不要让小映内置 AI 拆字幕或选样式。
+- 不要让xycut内置 AI 拆字幕或选样式。
 - 不要生成 SRT 来冒充模板字幕。
 - 不要直接覆盖 `short_subtitles.json` 或 `subtitle_layout_plan.json`。
 - 不要使用旧字段 `sound_effect_id`。
@@ -113,4 +113,4 @@ Agent 生成完成后，写入中间结果：
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_agent_subtitle_plan.py <task_id> "<task_dir>/agent/agent_subtitle_plan.json"
 ```
 
-保存脚本会同步写入小映需要的短字幕和编排计划。
+保存脚本会同步写入xycut需要的短字幕和编排计划。

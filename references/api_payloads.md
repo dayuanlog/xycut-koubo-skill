@@ -1,4 +1,4 @@
-# 小映接口和 JSON 格式
+# xycut接口和 JSON 格式
 
 ## 创建转写任务
 
@@ -24,7 +24,7 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/transcribe
 - `volcengine`
 - `online`
 
-如果选择火山在线 ASR 且失败，小映后端会自动兜底到本地 SenseVoice。
+如果选择火山在线 ASR 且失败，xycut后端会自动兜底到本地 SenseVoice。
 
 ## 保存自动预审结果
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Write Agent-generated 小映 title text into review_state.json."""
+"""Write Agent-generated xycut title text into review_state.json."""
 
 import argparse
 import json
@@ -48,8 +48,8 @@ def _read_title(value: str) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="保存小映 Agent 标题文本到 review_state.json")
-    parser.add_argument("task", help="小映 task_id 或任务目录")
+    parser = argparse.ArgumentParser(description="保存xycut Agent 标题文本到 review_state.json")
+    parser.add_argument("task", help="xycut task_id 或任务目录")
     parser.add_argument("title", help="标题文本，或保存标题文本的 .txt 文件路径")
     parser.add_argument("--base-url", default="http://127.0.0.1:23568")
     args = parser.parse_args()

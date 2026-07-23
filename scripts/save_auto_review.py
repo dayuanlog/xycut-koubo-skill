@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Save Agent auto-review results into a 小映 task.
+"""Save Agent auto-review results into a xycut task.
 
-This script is the bridge between Agent analysis and the 小映 manual review UI.
+This script is the bridge between Agent analysis and the xycut manual review UI.
 It marks suggested deletions in review_state.json, writes ASR word corrections
-as word_text_overrides, and lets 小映 regenerate final_copy.json/final_copy.txt.
+as word_text_overrides, and lets xycut regenerate final_copy.json/final_copy.txt.
 """
 
 import argparse
@@ -97,7 +97,7 @@ def page_text_overrides(review_page, word_text_overrides):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="保存小映 Agent 自动预审结果，并生成 final_copy")
+    parser = argparse.ArgumentParser(description="保存xycut Agent 自动预审结果，并生成 final_copy")
     parser.add_argument("task_id")
     parser.add_argument("analysis_json")
     parser.add_argument("--base-url", default="http://127.0.0.1:23568")
@@ -124,7 +124,7 @@ def main():
             "notes": raw.get("notes") if isinstance(raw.get("notes"), str) else "",
         })
     except Exception:
-        # review-state/save below is the authoritative write for 小映 auto-review.
+        # review-state/save below is the authoritative write for xycut auto-review.
         pass
 
     review_page = request_json(base_url + f"/api/workflow/v8/review-page-data/{args.task_id}")

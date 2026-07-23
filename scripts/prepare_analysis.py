@@ -31,7 +31,7 @@ def flatten_words(segment):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="把小映 transcript.json 整理成适合 Agent 分块预审的材料")
+    parser = argparse.ArgumentParser(description="把xycut transcript.json 整理成适合 Agent 分块预审的材料")
     parser.add_argument("transcript_json")
     parser.add_argument("output_dir", nargs="?", default="")
     parser.add_argument("--chunk-size", type=int, default=40)
@@ -110,7 +110,7 @@ def main():
 
     prompt_path = os.path.join(output_dir, "analysis_instructions.md")
     with open(prompt_path, "w", encoding="utf-8") as f:
-        f.write("""# 小映长口播 Agent 自动预审说明
+        f.write("""# xycut长口播 Agent 自动预审说明
 
 请按 chunk 顺序分析 `chunk_*.json`。
 

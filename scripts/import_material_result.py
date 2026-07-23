@@ -14,7 +14,7 @@ def post_json(url, payload):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="导入 Agent 素材结果到小映素材计划")
+    parser = argparse.ArgumentParser(description="导入 Agent 素材结果到xycut素材计划")
     parser.add_argument("task_id")
     parser.add_argument("result_path", help="agent/v8_image_material_result.json 或任务目录内的绝对路径")
     parser.add_argument("--base-url", default="http://127.0.0.1:23568")

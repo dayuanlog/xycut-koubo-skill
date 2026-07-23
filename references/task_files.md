@@ -1,6 +1,6 @@
-# 小映任务目录文件说明
+# xycut任务目录文件说明
 
-任务目录是小映后端、审核台和 Agent 的交接点。
+任务目录是xycut后端、审核台和 Agent 的交接点。
 
 默认位置：
 
@@ -26,7 +26,7 @@
 | `material_plan.json` | 素材规划和已下载/生成素材索引 |
 | `cover_plan.json` | AI 封面计划 |
 | `short_subtitles.json` | AI 或用户编辑后的短字幕文本 |
-| `subtitle_layout_plan.json` | 小映模板字幕编排计划，包含 style_id、parts、highlights、keyword、effect_theme_id |
+| `subtitle_layout_plan.json` | xycut模板字幕编排计划，包含 style_id、parts、highlights、keyword、effect_theme_id |
 
 ## `agent/`
 
@@ -41,7 +41,7 @@ agent/logs/
 
 ## `cache/`
 
-小映后端可重建缓存放这里，不要把它们当成最终用户编辑结果。
+xycut后端可重建缓存放这里，不要把它们当成最终用户编辑结果。
 
 ```text
 cache/review_page_data.json

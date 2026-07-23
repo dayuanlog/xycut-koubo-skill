@@ -83,8 +83,8 @@ def normalize_plan(plan):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="保存 Agent 生成的小映字幕编排")
-    parser.add_argument("task", help="小映 task_id 或任务目录")
+    parser = argparse.ArgumentParser(description="保存 Agent 生成的xycut字幕编排")
+    parser.add_argument("task", help="xycut task_id 或任务目录")
     parser.add_argument("agent_plan_json", help="Agent 生成的 agent_subtitle_plan.json")
     parser.add_argument("--base-url", default="http://127.0.0.1:23568")
     args = parser.parse_args()

@@ -42,7 +42,7 @@ def post_json(url, payload):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Append one 小映 material asset without rewriting full material_plan.json.")
+    parser = argparse.ArgumentParser(description="Append one xycut material asset without rewriting full material_plan.json.")
     parser.add_argument("task_id")
     parser.add_argument("line_id")
     parser.add_argument("asset_json", help="Asset JSON string or path to a JSON file")

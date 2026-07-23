@@ -14,7 +14,7 @@ def post_json(url, payload):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="调用小映口播转录 API")
+    parser = argparse.ArgumentParser(description="调用xycut Koubo转录 API")
     parser.add_argument("source_paths", nargs="+")
     parser.add_argument("--engine", default="")
     parser.add_argument("--base-url", default="http://127.0.0.1:23568")

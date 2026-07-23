@@ -53,7 +53,7 @@ def flatten_words(transcript):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="合并小映分块 Agent 分析结果")
+    parser = argparse.ArgumentParser(description="合并xycut分块 Agent 分析结果")
     parser.add_argument("output_json")
     parser.add_argument("analysis_files", nargs="+")
     parser.add_argument("--transcript", default="", help="可选：用于过滤越界句子/词 idx 的 transcript.json")
