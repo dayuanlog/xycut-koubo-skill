@@ -67,7 +67,156 @@
 
 除非用户在提示词中已经明确要求“直接生成素材”“直接生成图片”“开始生成”或已经提供完整生成要求，否则不要进入生成阶段。
 
-## C3. 按用户要求生成素材
+进入具体素材流程前，先看提示词里的 `material_source_mode` 或素材来源说明：
+
+- `classified`：只执行 C3 已分类素材库。
+- `unclassified`：只执行 C4 未分类素材库。
+- `pexels`：不读本地索引，按商业图库检索/下载素材。
+- `generated`：不读本地索引，按用户要求生成素材。
+
+不要在同一次任务里混合读取多种素材索引，除非用户明确要求混合多种素材来源。
+
+## C3. 使用已分类素材库
+
+如果用户要使用xycut已分类素材库，或者提示词中给出了素材库索引路径，优先读取：
+
+```text
+<task_dir>/agent/material_library_index.json
+```
+
+没有这个文件时，先导出索引：
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/export_material_library_index.py <task_id>
+```
+
+接口等价请求：
+
+```text
+POST http://127.0.0.1:23568/api/workflow/v8/agent-material-library/export
+```
+
+重要：
+
+- 不要调用xycut内置素材 AI 匹配接口 `/api/workflow/v8/material-match`。
+- `material_library_index.json` 只是给 Agent 看的轻量素材清单。
+- Agent 自己根据文案、标签、文件名和用户要求判断应该选哪个素材。
+- 选中已分类素材库里的素材时，在结果文件里写 `source_path`；xycut导入接口会自动复制到当前任务目录，并写入稳定的相对路径。
+- 同一个 `source_path` 默认只能匹配一行；不要为了凑数量重复使用同一个素材。
+
+已分类素材库结果示例：
+
+```json
+{
+  "task_id": "0704160321",
+  "source": "agent_library",
+  "lines": [
+    {
+      "line_id": "line_0007",
+      "asset_id": "library_0001",
+      "type": "video",
+      "source_path": "D:/素材库/潮汕/牛肉火锅.mp4",
+      "prompt": "这一行提到牛肉火锅，选择餐饮近景素材",
+      "status": "success"
+    }
+  ]
+}
+```
+
+## C4. 使用未分类素材库
+
+未分类素材库不使用 `material-cache.json`，而是使用素材目录下的：
+
+```text
+<material_dir>/material-analysis-cache.json
+```
+
+这个文件记录每个单独素材的轻量 Agent 分析结果。分类素材和未分类素材不要混用：
+
+- 分类素材库：使用 `material-cache.json`，靠目录标签匹配。
+- 未分类素材库：使用 `material-analysis-cache.json`，靠 Agent 画面分析匹配。
+
+第一步先同步索引：
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/sync_unclassified_material_index.py "<material_dir>"
+```
+
+如果返回里有 `pending_materials`，说明有新增或变化素材需要分析。Agent 需要逐个查看这些素材，并保存精简分析：
+
+```json
+{
+  "summary": "一句话画面描述，尽量短，适合匹配文案",
+  "keywords": ["关键词1", "关键词2", "关键词3"]
+}
+```
+
+保存单个素材分析：
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_unclassified_material_analysis.py "<material_dir>" "<material_id>" "<analysis_json或analysis文件路径>"
+```
+
+全部必要素材分析完成后，为当前 xycut 任务导出压缩匹配索引：
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/export_unclassified_material_match_index.py <task_id> "<material_dir>"
+```
+
+导出文件位置：
+
+```text
+<task_dir>/agent/material_analysis_match_index.json
+```
+
+匹配索引会自动压缩字段：
+
+```json
+{
+  "id": "m_xxx",
+  "n": "文件名.mp4",
+  "t": "v",
+  "d": 12.5,
+  "s": "一句话画面描述"
+}
+```
+
+字段含义：
+
+- `id`：素材 ID，最终返回这个。
+- `n`：文件名。
+- `t`：`v` 视频，`i` 图片。
+- `d`：时长秒。
+- `s`：画面描述。
+
+如果素材数量超过 100，xycut 会按每行文案先做一次轻量初筛，输出 `line_candidates`；Agent 只需要在每行候选里选择最合适素材。
+
+未分类素材结果示例：
+
+```json
+{
+  "task_id": "0704160321",
+  "source": "agent_unclassified",
+  "material_dir": "D:/素材库/未分类旅游素材",
+  "lines": [
+    {
+      "line_id": "line_0007",
+      "material_id": "m_abc123456789",
+      "prompt": "这一行讲潮汕美食，选择牛肉火锅画面",
+      "status": "success"
+    }
+  ]
+}
+```
+
+重要：
+
+- Agent 最终只需要返回 `material_id`，不要返回完整素材路径。
+- xycut 后端会用 `material_id` 从 `material-analysis-cache.json` 找到真实路径。
+- 不要每次重建全部分析索引；新增素材只分析新增，删除素材会自动从索引移除。
+- 同一个 `material_id` 默认只能匹配一行；如果素材数量不足必须复用，要在 `prompt` 里说明为什么复用。
+
+## C5. 按用户要求生成素材
 
 只有用户明确确认开始生成或开始下载素材后，才执行下面流程。
 
@@ -103,7 +252,7 @@ Pexels 或其他视频素材路径示例：
 - 不要等全部图片都生成完才导入。
 - xycut后端会合并写入 `material_plan.json`，不要覆盖已有素材。
 
-## C4. 生图风格
+## C6. 生图风格
 
 如果用户明确指定其他生图 skill、图片风格、人物 IP、品牌风格或素材要求，优先按用户指定执行。
 
@@ -114,7 +263,7 @@ Pexels 或其他视频素材路径示例：
 - 图片尺寸 1080x1920
 - 可以结合可用的 `dayuan-ip` 或其他生图 skill 完成
 
-## C5. 保存结果文件
+## C7. 保存结果文件
 
 图片或视频素材准备完成后，写入：
 
@@ -154,12 +303,14 @@ Pexels 或其他视频素材路径示例：
 注意：
 
 - `file_path` 必须是相对 `<task_dir>` 的路径。
+- 如果素材来自已分类素材库，可以不写 `file_path`，改写绝对 `source_path`。
+- 如果素材来自未分类素材库，可以不写 `file_path`，改写 `material_id`，并在顶层提供 `material_dir`。
 - `type` 可以是 `image` 或 `video`；不填时xycut会按文件扩展名推断。
 - `line_id` 必须来自 `final_copy.json` 的 `lines[].line_id`。
 - 成功项必须保证素材文件真实存在。
 - 英文路径分隔符建议统一使用 `/`。
 
-## C6. 导入到xycut
+## C8. 导入到xycut
 
 结果文件写好后，调用xycut后端 API：
 

@@ -17,8 +17,12 @@ description: "使用 xycut 处理口播剪辑工作流。它负责调用 xycut �
 6. 不确定是否删除口播内容时，保留给 xycut 审核台人工确认。
 7. `final_copy.json` 是成稿与原始 `line_id` 的权威映射；`final_copy.txt` 只适合快速阅读文案。
 8. xycut 字幕编排不是 SRT。右侧字幕列只读取 `short_subtitles.json` 和 `subtitle_layout_plan.json`。
-9. 字幕编排默认由 Agent 使用自身 AI 能力完成；xycut 只负责保存、展示和生成草稿。
+9. 字幕编排默认由 Agent 使用自身 AI 能力完成；xycut 只负责导出精简上下文、保存、展示和生成草稿。
 10. xycut 模板字幕字段由后端维护：03 重点样式保留完整字幕并补充 `keyword`，01/02/03 可补充 `highlights`，02/03 的音效/文字动画主题使用 `effect_theme_id`，不要再使用旧的 `sound_effect_id`。
+11. 如果当前模板包含英文副字幕字段，例如 `main_en`、`left_en`、`right_en`、`text_2`、`text_2_left`、`text_2_right`，Agent 生成字幕编排时必须一起写入英文内容，不要留给 xycut 内置 AI 补齐。
+12. 生成 `parts` 时必须以当前模板中对应 `style_id` 的 `layers[].source` 为准，不要按 `01/02/03` 或 `role/name` 猜字段；`role` 只适合理解显示语义，真正写入字段看 `source`。
+13. 不要读取 xycut 项目源码、不要解密模板、不要直接读取完整模板 JSON；需要模板、特效、任务文案时，只调用 xycut Agent 上下文接口或对应导出脚本。
+14. `parts` 只能写 Agent 上下文里当前 `style_id` 的 `chinese_sources / english_sources / keyword_sources` 字段；不要额外写 `main/text/part_a/part_b` 等兼容字段。
 
 ## 入口判断
 
@@ -53,6 +57,11 @@ description: "使用 xycut 处理口播剪辑工作流。它负责调用 xycut �
 | 合并预审结果 | `scripts/merge_analysis.py` |
 | 保存自动预审结果 | `scripts/save_auto_review.py` |
 | 保存 Agent 字幕编排 | `scripts/save_agent_subtitle_plan.py` |
+| 导出当前模板字幕字段表 | `scripts/export_subtitle_template_specs.py` |
+| 导出已分类素材库索引 | `scripts/export_material_library_index.py` |
+| 同步未分类素材索引 | `scripts/sync_unclassified_material_index.py` |
+| 保存未分类素材分析 | `scripts/save_unclassified_material_analysis.py` |
+| 导出未分类素材匹配索引 | `scripts/export_unclassified_material_match_index.py` |
 | 导入 Agent 素材结果 | `scripts/import_material_result.py` |
 | 追加单个素材 | `scripts/append_material_asset.py` |
 | 写回标题文本 | `scripts/save_title_workflow.py` |
@@ -62,6 +71,9 @@ description: "使用 xycut 处理口播剪辑工作流。它负责调用 xycut �
 
 - 不要把“字幕编排”做成 SRT 文件。
 - 不要调用 xycut 内置字幕 AI 接口；字幕理解、拆分、样式选择和增强由 Agent 完成。
+- 不要调用 xycut 内置素材 AI 匹配接口 `/api/workflow/v8/material-match`；素材理解和选择由 Agent 完成，只通过导出索引和导入素材结果接口与 xycut 交换数据。
+- 不要每次重新分析全部未分类素材；必须优先复用素材目录下的 `material-analysis-cache.json`，只补新增/变化素材。
+- 匹配已有视频/图片素材时，同一个素材默认只能使用一次；除非用户明确要求复用，或可用素材明显不足并写明原因。
 - 不要用 `final_copy.txt` 推断 `line_id`。
 - 不要自己按第 1 行、第 2 行编造素材 `line_id`。
 - 不要直接编辑 `material_plan.json`；素材协作结果应通过 xycut 导入 API 合并。

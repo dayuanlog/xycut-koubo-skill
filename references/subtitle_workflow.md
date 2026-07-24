@@ -37,35 +37,45 @@ xycut页面右侧字幕列读取：
 
 并且 `source` 类似 `user_edited`，不要覆盖，除非用户明确要求重新生成。
 
-## B2. 读取模板和效果库
+## B2. 读取 Agent 上下文
 
-优先从 `review_state.json` 读取当前模板：
+不要直接读取 xycut 项目源码、模板 JSON 或加密效果库。模板和效果库可能被打包或加密，Agent 只读取 xycut 后端导出的精简上下文。
 
-```text
-koubo_template_id
-v8_template_id
-```
-
-如果没有选择记录，读取xycut默认模板：
+优先调用：
 
 ```text
-static/template/index.json -> default_template_id
-static/template/<template_id>/template.json
+GET http://127.0.0.1:23568/api/workflow/v8/agent-context/<task_id>
 ```
 
-还需要读取：
+也可以用脚本包装这个接口：
 
-```text
-static/template/effect_packs.json
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/export_subtitle_template_specs.py "<task_id或task_dir>"
 ```
 
-模板决定：
+如果接口或脚本返回失败，停止处理并告诉用户 xycut 后端没有提供完整上下文。不要在缺少模板字段或特效 ID 的情况下硬生成字幕。
+
+上下文决定：
 
 - 哪些 `style_id` 可用。
-- 每个样式需要哪些中文 parts，例如 `part_a/part_b/main/keyword`。
+- 每个样式必须写入哪些 `parts` 字段，权威来源是 `template.styles[].chinese_sources / english_sources / keyword_sources`。
+- 每个样式需要哪些中文字段，例如 `part_a/part_b/main/text/keyword`。
+- 每个样式是否需要英文副字幕字段，例如 `main_en/text_2/text_2_left/text_2_right/left_en/right_en`。
 - 01/02/03 的 A 档最大字数。
 - 03 是否有 `keyword_variants`。
-- 可用的 `effect_theme_id`。
+- 可用的 `effect_theme_id`，来自 `effect_themes.themes[].id`。
+- 最终成稿，来自 `final_copy.lines[]`。
+
+先检查上下文：
+
+```text
+status 必须是 success
+final_copy.available 必须是 true
+template.styles 必须非空
+如果 template.has_keyword_style=true，effect_themes.available 应该是 true
+```
+
+注意：不要照抄历史模板示例字段。实际字段只看当前上下文。
 
 ## B3. Agent 自行生成字幕编排
 
@@ -86,10 +96,13 @@ Agent 按三步思路在自己脑中完成，但最终只保存一个结果文�
 根据模板选择 `style_id`：
 
 - 01/02 通常都是普通字幕，按节奏混合使用。
-- 有 `part_a/part_b` 的样式才拆 A/B；没有 A/B 的样式只写 `main`。
+- 当前样式的 `layers[].source` 里有 `part_a/part_b` 才拆 A/B；没有 A/B 时按模板 source 写 `text` 或 `main`。
 - A/B 必须能自然拼回完整 `text`，不要把固定词、数字、单位、英文拆断。
 - 如果一句话太短，不适合 A/B，就优先选单字段样式。
-- 03 只给真正重点句使用，并保留完整字幕 `main`。
+- 03 只给真正重点句使用，并按模板中文 source 保留完整字幕。
+- 03 不按比例硬凑：20 条以内 0-2 条，20-40 条 2-4 条，40-80 条 4-6 条，80 条以上 5-8 条。优先给开头钩子、强利益点、价格数字、反转结论、行动号召。
+- 生成 `parts` 时只能写当前 `style_id` 在上下文里列出的 `chinese_sources / english_sources / keyword_sources` 字段；不要因为 `role` 叫 `left_cn/right_cn` 就把字段写成 `left_cn/right_cn`。
+- 不要额外写兼容字段。比如当前 03 只有 `chinese_sources=["text"]`、`keyword_sources=["keyword"]`，就只能写 `parts.text` 和 `parts.keyword`，不要再写 `main/part_a/part_b`。
 
 ### 第三步：增强
 
@@ -97,7 +110,9 @@ Agent 按三步思路在自己脑中完成，但最终只保存一个结果文�
 
 - `highlights`：只选择 parts 中真实存在的短词，通常 2-5 个字，不要整句高亮。
 - `keyword`：只在模板支持 `keyword` 的样式里使用，通常 2-4 个字，不能等于整条字幕。
-- `effect_theme_id`：必须来自 `effect_packs.json`；不要为了凑数量大量加音效。
+- `effect_theme_id`：必须来自上下文里的 `effect_themes.themes[].id`；不要为了凑数量大量加音效。
+- 03 必须写 `keyword` 和 `effect_theme_id`。如果拿不到效果主题，停止并提示上下文不完整，不要因为读不到完整模板/效果库就直接放弃 03。
+- 英文副字幕：如果模板 `layers[].source` 里包含英文字段，必须同步写入简短自然的英文，不要留到生成草稿时再由 xycut 内置 AI 补齐。
 
 ## B4. Agent 输出文件
 
@@ -133,7 +148,9 @@ Agent 按三步思路在自己脑中完成，但最终只保存一个结果文�
       "style_id": "01",
       "parts": {
         "part_a": "就是一条",
-        "part_b": "视频了"
+        "part_b": "视频了",
+        "text_2_left": "That makes",
+        "text_2_right": "one video"
       }
     }
   ]
@@ -143,10 +160,13 @@ Agent 按三步思路在自己脑中完成，但最终只保存一个结果文�
 关键要求：
 
 - `items[].text` 是该条完整中文字幕。
-- `parts` 必须来自模板支持的字段。
+- `parts` 必须且只能包含当前 `style_id` 的上下文 sources 字段。
+- `role` 只用于理解语义，不是写入字段；写入字段只看上下文 sources。
 - `part_a + part_b` 必须等于 `text`。
-- 单字段样式的 `main` 必须等于 `text`。
-- 不要输出英文 parts，除非用户明确要求双语模板字幕。
+- 单字段样式如果上下文 source 是 `text`，就只写 `parts.text`；如果上下文 source 是 `main`，就只写 `parts.main`。
+- 如果模板支持英文副字幕 source，必须输出对应英文；A/B 样式常见是 `text_2_left/text_2_right`，单字段样式常见是 `main_en` 或 `text_2`。
+- 英文也只写上下文 sources 中列出的字段；不要额外补写 `left_en/right_en/text_2` 等兼容字段。
+- 英文要短、自然、适合画面点缀，不要逐字硬翻译，不要修改中文。
 - 不要输出旧字段 `sound_effect_id`。
 
 ## B5. 写回xycut

@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import re
 import urllib.request
 
 
@@ -41,12 +42,18 @@ def compact_text(value):
     return str(value or "").strip()
 
 
+def clean_subtitle_display_text(value):
+    text = compact_text(value)
+    text = re.sub(r"[，。！？；：、,.!?;:]+", "", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def plan_lines(plan):
     lines = []
     for item in plan.get("items") or []:
         if not isinstance(item, dict):
             continue
-        text = compact_text(item.get("text"))
+        text = clean_subtitle_display_text(item.get("text"))
         if text:
             lines.append(text)
     return lines
@@ -62,7 +69,7 @@ def normalize_plan(plan):
     for index, item in enumerate(items):
         if not isinstance(item, dict):
             continue
-        text = compact_text(item.get("text"))
+        text = clean_subtitle_display_text(item.get("text"))
         style_id = compact_text(item.get("style_id"))
         parts = item.get("parts") if isinstance(item.get("parts"), dict) else {}
         if not text or not style_id or not parts:
@@ -71,7 +78,13 @@ def normalize_plan(plan):
         next_item["index"] = index
         next_item["text"] = text
         next_item["style_id"] = style_id
-        next_item["parts"] = {str(k): compact_text(v) for k, v in parts.items() if compact_text(v)}
+        next_parts = {}
+        for key, value in parts.items():
+            key = str(key)
+            text_value = compact_text(value) if key.endswith("_en") or key in {"text_2", "text_2_left", "text_2_right"} else clean_subtitle_display_text(value)
+            if text_value:
+                next_parts[key] = text_value
+        next_item["parts"] = next_parts
         output_items.append(next_item)
     if not output_items:
         raise ValueError("字幕编排结果没有可保存的 items")
@@ -80,6 +93,28 @@ def normalize_plan(plan):
     output["source"] = "agent_generated"
     output["items"] = output_items
     return output
+
+
+def build_plan_warnings(plan):
+    items = plan.get("items") if isinstance(plan, dict) else []
+    if not isinstance(items, list):
+        return []
+    warnings = []
+    style03_count = 0
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            continue
+        if compact_text(item.get("style_id")) != "03":
+            continue
+        style03_count += 1
+        parts = item.get("parts") if isinstance(item.get("parts"), dict) else {}
+        if not compact_text(parts.get("keyword")):
+            warnings.append(f"第 {index + 1} 条 03 缺少 parts.keyword")
+        if not compact_text(item.get("effect_theme_id")):
+            warnings.append(f"第 {index + 1} 条 03 缺少 effect_theme_id")
+    if len(items) >= 20 and style03_count == 0:
+        warnings.append("当前字幕超过 20 条但 03 数量为 0；如果模板支持 03，建议选择真正重点句使用。")
+    return warnings
 
 
 def main():
@@ -93,6 +128,7 @@ def main():
     if not task_id:
         raise RuntimeError("无法识别 task_id")
     plan = normalize_plan(load_json(args.agent_plan_json))
+    warnings = build_plan_warnings(plan)
     lines = plan_lines(plan)
     if not lines:
         raise RuntimeError("没有可保存的短字幕 lines")
@@ -117,6 +153,7 @@ def main():
         "layout_item_count": len(plan.get("items") or []),
         "short_subtitles_path": short_result.get("short_subtitles_path"),
         "plan_path": plan_result.get("plan_path"),
+        "warnings": warnings,
     }
     print(json.dumps(output, ensure_ascii=False, indent=2))
 
