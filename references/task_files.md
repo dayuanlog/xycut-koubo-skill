@@ -26,7 +26,7 @@
 | `material_plan.json` | 素材规划和已下载/生成素材索引 |
 | `cover_plan.json` | AI 封面计划 |
 | `short_subtitles.json` | AI 或用户编辑后的短字幕文本 |
-| `subtitle_layout_plan.json` | 新版 V8 字幕编排计划，包含 `style_id`、`parts`、`highlight_ranges`、`segments`、`theme`、`asset_match` |
+| `subtitle_layout_plan.json` | 新版 V8 字幕编排计划，包含 `style_id`、`parts`、01/02 的 `highlight_ranges`、03 的 `segments/theme`、`asset_match` |
 
 ## `agent/`
 

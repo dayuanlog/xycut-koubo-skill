@@ -66,9 +66,9 @@ POST /api/workflow/v8/subtitle-workflow/ai-generate
 
 1. 根据最终成稿做语义字幕结构规划，避免过碎，也避免超长整段。
 2. 选择 01 单行默认、02 单行强调、03 重点预设，并参考 `emphasis_ratio` 控制 03 的目标比例。
-3. 为 01/02 生成关键词高亮范围。
+3. 为 01/02 生成关键词高亮范围；03 重点预设不做关键词或划重点。
 4. 独立生成需要的英文副字幕。
-5. 为 03 做语义拆分和主题选择；正常长度保留一条，超长 03 会继续拆成多条 03。
+5. 为 03 做语义拆分和主题选择；第三步只把单条 03 拆成 1-3 个 `segments`，不再继续拆成多条 03。超长内容应在第二步先拆短并重新判断 01/02/03。
 6. 根据模板资产池自动匹配字幕个人预设和样式个人预设。
 7. 写回 `short_subtitles.json` 和 `subtitle_layout_plan.json`。
 
@@ -128,9 +128,9 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_agent
 - `text`：完整中文字幕，必须存在。
 - `style_id`：`01`、`02` 或 `03`。
 - `parts`：建议至少写 `main`；如果已有英文可写 `main_en` 或 `text_2`。
-- `highlight_ranges`：01/02 关键词高亮范围。关键词必须来自原字幕，不要整句高亮。
+- `highlight_ranges`：只用于 01/02 关键词高亮范围。关键词必须来自原字幕，不要整句高亮；03 不写 `highlight_ranges`、`highlights` 或 `parts.keyword`。
 - `segments`：03 的分段，只用于匹配样式个人预设。必须按顺序拼回 `text`。
-- `theme`：03 的 8 个主题之一：`重点突出`、`转折对比`、`疑问悬疑`、`提醒避坑`、`正向结果`、`惊讶冲击`、`轻松幽默`、`价格利益`。
+- `theme`：03 的 8 个主题之一：`重点突出`、`转折反差`、`疑问悬疑`、`提醒避坑`、`正向结果`、`惊讶冲击`、`轻松幽默`、`价格利益`。
 - `asset_match`：可选。一般由后端匹配，不建议 Agent 手写。
 - `effect_theme_id`、`sound_effect_id`：不作为当前字幕编排必填字段。
 

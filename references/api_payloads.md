@@ -111,6 +111,8 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_agent
 }
 ```
 
+`highlight_ranges` 只用于 01/02。03 使用样式个人预设，不要写 `highlight_ranges`、`highlights` 或 `parts.keyword`。
+
 保存短字幕接口请求：
 
 ```json

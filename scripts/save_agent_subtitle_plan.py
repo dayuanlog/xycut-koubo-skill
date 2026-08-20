@@ -15,7 +15,7 @@ import urllib.request
 
 
 ENGLISH_KEYS = {"main_en", "left_en", "right_en", "text_2", "text_2_left", "text_2_right"}
-THEMES = {"重点突出", "转折对比", "疑问悬疑", "提醒避坑", "正向结果", "惊讶冲击", "轻松幽默", "价格利益"}
+THEMES = {"重点突出", "转折反差", "疑问悬疑", "提醒避坑", "正向结果", "惊讶冲击", "轻松幽默", "价格利益"}
 
 
 def load_json(path):
@@ -139,7 +139,11 @@ def normalize_plan(plan):
         next_item["text"] = text
         next_item["style_id"] = style_id
         next_item["parts"] = normalize_parts(item.get("parts"), text)
-        ranges = normalize_highlight_ranges(item.get("highlight_ranges"))
+        next_item.pop("highlight_ranges", None)
+        next_item.pop("highlights", None)
+        if style_id == "03":
+            next_item["parts"].pop("keyword", None)
+        ranges = [] if style_id == "03" else normalize_highlight_ranges(item.get("highlight_ranges"))
         if ranges:
             next_item["highlight_ranges"] = ranges
         segments = normalize_segments(item.get("segments"))
@@ -148,7 +152,7 @@ def normalize_plan(plan):
         theme = compact_text(item.get("theme") or item.get("asset_theme"))
         if theme:
             next_item["theme"] = theme
-        for key in ("asset_match", "asset_match_en", "highlights", "source_indices", "personal_theme_source"):
+        for key in ("asset_match", "asset_match_en", "source_indices", "personal_theme_source"):
             if key in item:
                 next_item[key] = item[key]
         output_items.append(next_item)

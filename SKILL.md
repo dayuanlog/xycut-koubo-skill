@@ -1,4 +1,4 @@
-﻿---
+---
 name: xycut-koubo-skill
 description: "使用 xycut 处理口播剪辑工作流。它负责调用 xycut 的脚本和接口，把 Agent 结果稳定写回 xycut 任务目录，并返回 xycut 任务页面链接。"
 ---
