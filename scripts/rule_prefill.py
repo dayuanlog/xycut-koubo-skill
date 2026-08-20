@@ -33,6 +33,12 @@ def word_text(word):
     return str(word.get("text") or word.get("word") or "").strip()
 
 
+def next_word_text(words, pos):
+    if pos + 1 >= len(words):
+        return ""
+    return word_text(words[pos + 1])
+
+
 def main():
     parser = argparse.ArgumentParser(description="xycut保守规则预选：明显口癖词/句首填充词")
     parser.add_argument("transcript_json")
@@ -53,6 +59,8 @@ def main():
             reasons[f"word_{idx}"] = "规则预选：明显口癖词"
             continue
         if pos <= 1 and text in LEADING_FILLERS and len(words) >= 6:
+            if text == "对" and next_word_text(words, pos) == "于":
+                continue
             delete_words.add(idx)
             reasons[f"word_{idx}"] = "规则预选：句首填充词"
 

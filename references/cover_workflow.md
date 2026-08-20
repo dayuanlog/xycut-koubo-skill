@@ -52,24 +52,22 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_cover
 
 如果本次也生成了封面标题，必须同时运行标题写回脚本：
 
-方式一：写封面时直接带标题：
+方式一：写封面时带标题文件，PowerShell 下推荐这种方式：
 
 ```bash
-python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_cover_workflow.py <task_id> "<task_dir>/cover/agent_cover_001.png" --title "第一行标题
-第二行标题"
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_cover_workflow.py <task_id> "<task_dir>/cover/agent_cover_001.png" --title-file "<task_dir>/agent/newstitle.txt"
 ```
 
 方式二：封面和标题分开写：
 
 ```bash
-python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_title_workflow.py <task_id> "第一行标题
-第二行标题"
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_title_workflow.py <task_id> "<task_dir>/agent/newstitle.txt"
 ```
 
-也可以先把标题保存为文本文件，再传入文件路径：
+也可以直接传单行标题：
 
 ```bash
-python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_title_workflow.py <task_id> "<task_dir>/agent/newstitle.txt"
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/save_title_workflow.py <task_id> "标题文本"
 ```
 
 脚本会写入：

@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "这个 xycut任务目录已经审核好了：D:/soft/JianyingPro Drafts/临时文件/koubo_temp/0706110312。请用 Agent 生成短字幕和模板编排，不要生成 SRT。",
-      "expected_output": "应进入模式 B，读取 references/subtitle_workflow.md 和需要时读取 references/subtitle_rules.md；由 Agent 自己读取 final_copy、模板和 effect_packs，生成 agent/agent_subtitle_plan.json，然后运行 save_agent_subtitle_plan.py 写回 short_subtitles.json 和 subtitle_layout_plan.json；不得调用xycut内置 /api/workflow/v8/subtitle-workflow/ai-generate，也不得生成 SRT。",
+      "expected_output": "应进入模式 B，读取 references/subtitle_workflow.md；默认运行 scripts/run_subtitle_workflow.py 调用当前 V8 后端 /api/workflow/v8/subtitle-workflow/ai-generate，生成并写回 short_subtitles.json 和 subtitle_layout_plan.json；不得生成 SRT。只有用户明确提供手动计划时才使用 save_agent_subtitle_plan.py。",
       "files": []
     },
     {
@@ -28,7 +28,7 @@
     {
       "id": 5,
       "prompt": "请使用 xycut-koubo-skill 处理这个 xycut任务的草稿准备：D:/soft/JianyingPro Drafts/临时文件/koubo_temp/0706110312。需要短字幕、标题文本和封面协作，先给我方案。",
-      "expected_output": "应进入模式 E，读取 references/draft_prepare_workflow.md，检查 final_copy、short_subtitles、subtitle_layout_plan、review_state.jianying_settings.newstitle_content、cover_plan；先说明缺失项和方案。需要字幕时由 Agent 自己生成 agent/agent_subtitle_plan.json 并调用 save_agent_subtitle_plan.py 写回；需要写回标题时使用 save_title_workflow.py，需要封面写回时使用 save_cover_workflow.py；不直接生成剪映草稿。",
+      "expected_output": "应进入模式 E，读取 references/draft_prepare_workflow.md，检查 final_copy、short_subtitles、subtitle_layout_plan、review_state.jianying_settings.newstitle_content、cover_plan；先说明缺失项和方案。需要字幕时默认运行 run_subtitle_workflow.py；需要写回标题时使用 save_title_workflow.py，需要封面写回时使用 save_cover_workflow.py；不直接生成剪映草稿。",
       "files": []
     }
   ]

@@ -13,7 +13,40 @@ def load_task_paths_from_transcript(transcript_json):
         raise FileNotFoundError(f"缺少 task_config.json，无法定位 agent/chunks: {config_path}")
     with open(config_path, "r", encoding="utf-8") as f:
         task_config = json.load(f)
-    return task_config.get("paths") or {}
+    return task_config
+
+
+def normalize_asr_glossary_terms(value):
+    if isinstance(value, dict):
+        value = value.get("terms") or value.get("items") or []
+    elif isinstance(value, str):
+        for sep in ("\r", "\n", ",", "，", "、", ";", "；"):
+            value = value.replace(sep, "\n")
+        value = value.splitlines()
+    elif not isinstance(value, list):
+        value = []
+    terms = []
+    for item in value:
+        term = str(item or "").strip()
+        if term and term not in terms:
+            terms.append(term)
+        if len(terms) >= 200:
+            break
+    return terms
+
+
+def load_asr_glossary_terms(task_config):
+    app_dir = str((task_config or {}).get("app_dir") or "").strip()
+    if not app_dir:
+        return []
+    path = os.path.join(app_dir, "data", "asr_glossary.json")
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return normalize_asr_glossary_terms(json.load(f))
+    except Exception:
+        return []
 
 
 def flatten_words(segment):
@@ -37,11 +70,22 @@ def main():
     parser.add_argument("--chunk-size", type=int, default=40)
     args = parser.parse_args()
 
-    paths = load_task_paths_from_transcript(args.transcript_json)
+    task_config = load_task_paths_from_transcript(args.transcript_json)
+    paths = task_config.get("paths") or {}
     output_dir = args.output_dir or paths.get("agent_chunks_dir")
     if not output_dir:
         raise RuntimeError("task_config.json 缺少 paths.agent_chunks_dir")
     os.makedirs(output_dir, exist_ok=True)
+    agent_dir = os.path.dirname(os.path.abspath(output_dir))
+    asr_glossary_terms = load_asr_glossary_terms(task_config)
+    asr_glossary_path = ""
+    if asr_glossary_terms:
+        asr_glossary_path = os.path.join(agent_dir, "asr_glossary.json")
+        with open(asr_glossary_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "terms": asr_glossary_terms,
+                "source": "v8_global_asr_glossary",
+            }, f, ensure_ascii=False, indent=2)
     with open(args.transcript_json, "r", encoding="utf-8") as f:
         transcript = json.load(f)
 
@@ -96,6 +140,8 @@ def main():
         "sentence_count": len(sentences),
         "chunk_size": chunk_size,
         "chunks": chunks,
+        "asr_glossary_path": asr_glossary_path,
+        "asr_glossary_terms": asr_glossary_terms,
         "output_schema": {
             "delete_sentences": [],
             "delete_word_indices": [],
@@ -131,6 +177,7 @@ def main():
 - 整句明显无效、重复、口误，写入 `delete_sentences`，使用句子 `index`。
 - 只需要删除局部字词时，写入 `delete_word_indices`，使用词的全局 `idx`。
 - 明显 ASR 错字、同音错词、专有名词识别错误，写入 `word_text_overrides`，key 使用词的全局 `idx`，value 使用修正后的单词文本。
+- 如果 `manifest.json` 里有 `asr_glossary_terms` 或 `asr_glossary_path`，请把它作为 ASR 修正参考词典。词典只用于判断明显 ASR 错字、同音错字、专有名词识别错误，不要为了匹配词典强行替换原文。
 - 只写 `reasons`、`notes` 或自然语言“建议删除”不会真正删除；要删除必须写入 `delete_sentences` 或 `delete_word_indices`。
 - 输入文本来自 ASR，可能有同音错词或专有名词识别错误；这类问题优先写 `word_text_overrides`，不要因为转写错字就删除句子。
 - 重复判断以完整语义为主，不只看字面相似；开头相似但提供不同信息的句子要保留。

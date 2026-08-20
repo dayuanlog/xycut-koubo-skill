@@ -2,7 +2,7 @@
 
 目标：基于xycut已审核成稿，协助生成或下载图片/视频素材，并通过xycut导入接口写回 `material_plan.json`。
 
-收到用户给出的xycut任务目录后，默认只做分析，不要立刻生成图片，不要写入项目文件，不要调用导入 API。
+收到用户给出的xycut任务目录后，默认只做分析，不要立刻生成图片，不要写入项目文件，不要调用导入 API。用户明确要求“直接匹配”“完成匹配”“导入素材”“使用某分类素材为项目匹配”时，可以直接执行对应素材流程并导入。
 
 ## C1. 读取成稿
 
@@ -65,7 +65,7 @@
 - 是否先生成 1-3 张样张确认？
 ```
 
-除非用户在提示词中已经明确要求“直接生成素材”“直接生成图片”“开始生成”或已经提供完整生成要求，否则不要进入生成阶段。
+除非用户在提示词中已经明确要求“直接生成素材”“直接生成图片”“开始生成”“直接匹配”“完成匹配”“导入素材”或已经提供完整生成要求，否则不要进入生成阶段。
 
 进入具体素材流程前，先看提示词里的 `material_source_mode` 或素材来源说明：
 
@@ -88,6 +88,12 @@
 
 ```bash
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/export_material_library_index.py <task_id>
+```
+
+素材较多时，优先用筛选参数导出精简候选。`--tag/--tags` 指的是素材条目上的标签，不是素材库名称；选择素材库仍使用 `--material-path-index`。
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/export_material_library_index.py <task_id> --material-path-index 0 --tag "青澳湾" --tag "广济桥" --compact --top-per-tag 30
 ```
 
 接口等价请求：

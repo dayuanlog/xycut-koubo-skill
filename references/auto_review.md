@@ -70,13 +70,33 @@ chunk_001.md
 
 Agent 按 chunk 分析，不要把长口播一次性塞进一个回复。
 
+如果 V8 全局词典里有词条，脚本会额外生成：
+
+```text
+<task_dir>/agent/asr_glossary.json
+```
+
+并在 `manifest.json` 写入 `asr_glossary_terms` 和 `asr_glossary_path`。这些词条只用于辅助判断明显 ASR 错字、同音错字、专有名词识别错误；不要为了匹配词典强行替换原文。
+
 可选规则预选：
 
 ```bash
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/rule_prefill.py "<task_dir>/transcript.json"
 ```
 
-如果生成了 `agent/rule_prefill.json`，合并时应一起传入。规则预选只是辅助，Agent 仍要按本文件规则判断，不要盲目删除。
+如果生成了 `agent/rule_prefill.json`，它只是候选提示。Agent 必须先复核里面的删除项；确认不会破坏原文后，才可以参与合并。没有把握时不要合并规则预选结果。
+
+需要快速核对某个词的 `idx,text,start,end` 时，使用轻量词表脚本，不要直接读取很大的 chunk JSON：
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/print_chunk_words.py "<task_dir>/agent/chunks" --idx-start 120 --idx-end 140
+```
+
+也可以按句子 index 查看：
+
+```bash
+python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/print_chunk_words.py "<task_dir>/agent/chunks" --sentence-index 12
+```
 
 ## A3. 每个 chunk 的输出格式
 
@@ -98,6 +118,7 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/rule_prefi
 - `delete_word_indices`：词级/字级删除，使用词的全局 `idx`。
 - `word_text_overrides`：明显 ASR 错字修正，key 使用词的全局 `idx`，value 使用修正后的文字。
 - `reasons` 和 `notes` 只是说明，不会真正删除。要删除必须写入 `delete_sentences` 或 `delete_word_indices`。
+- 如果本任务存在 `agent/asr_glossary.json` 或 `manifest.asr_glossary_terms`，分析错字时应参考这些词条，但只能在原文明显识别错误且不改变原意时使用。
 
 不要编造索引，只能使用当前 chunk 出现的 `index` 和 `idx`。
 
@@ -170,7 +191,7 @@ python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/rule_prefi
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/merge_analysis.py analysis_merged.json "<chunk_result_001.json>" "<chunk_result_002.json>" --transcript "<task_dir>/transcript.json"
 ```
 
-如果有规则预选结果，一起传入：
+如果规则预选结果已经复核，可以一起传入：
 
 ```bash
 python C:/Users/Administrator/.codex/skills/xycut-koubo-skill/scripts/merge_analysis.py analysis_merged.json \
